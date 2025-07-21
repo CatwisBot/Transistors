@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Translate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="navbar-logo">
+        <img src="picture/logo.png" alt="Logo" />
+      </div>
+      <div class="navbar-sub-links">
+        <a href="#" class="active">Translate</a>
+      </div>
+    </nav>
+
+    <main class="translate-main">
+      <section class="translate-box">
+        <h1>Penerjemah Teks</h1>
+        <form id="translateForm" autocomplete="off">
+          <textarea
+            id="inputText"
+            placeholder="Masukkan teks yang ingin diterjemahkan..."
+            required
+          ></textarea>
+          <button style="margin-bottom: 10px;" type="button" onclick="speakInput()" class="translate-btn">🔊 Dengarkan </button>
+          <div class="translate-options">
+            <label for="fromLang">Dari:</label>
+            <select id="fromLang">
+              <option value="id">Indonesia</option>
+              <option value="en">Inggris</option>
+              <option value="fr">Prancis</option>
+              <option value="de">Jerman</option>
+              <option value="ja">Jepang</option>
+              <option value="es">Spanyol</option>
+              <option value="ar">Arab</option>
+              <option value="zh">Mandarin</option>
+            </select>
+            <label for="toLang">Ke:</label>
+            <select id="toLang">
+              <option value="en">Inggris</option>
+              <option value="id">Indonesia</option>
+              <option value="fr">Prancis</option>
+              <option value="de">Jerman</option>
+              <option value="ja">Jepang</option>
+              <option value="es">Spanyol</option>
+              <option value="ar">Arab</option>
+              <option value="zh">Mandarin</option>
+            </select>
+          </div>
+          <button type="submit" class="translate-btn">Terjemahkan</button>
+        </form>
+        <div class="translate-result" id="translateResult"></div>
+        <div class="voice-buttons">
+          <button type="button" onclick="speakResult()" class="translate-btn">
+            🔊 Dengarkan
+          </button>
+          <button
+            type="button"
+            onclick="startListening()"
+            class="translate-btn"
+          >
+            🎤 Ucapkan
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      document
+        .getElementById("translateForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const from = document.getElementById("fromLang").value;
+          const to = document.getElementById("toLang").value;
+          const text = document.getElementById("inputText").value.trim();
+          const resultDiv = document.getElementById("translateResult");
+
+          if (from === to) {
+            resultDiv.textContent = text;
+            return;
+          }
+
+          resultDiv.textContent = "Menerjemahkan...";
+
+          try {
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(
+              text
+            )}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            // Hasil terjemahan ada di data[0][0][0]
+            if (data && data[0] && data[0][0] && data[0][0][0]) {
+              resultDiv.textContent = data[0][0][0];
+            } else {
+              resultDiv.textContent = "Terjadi kesalahan saat menerjemahkan.";
+            }
+          } catch (err) {
+            resultDiv.textContent =
+              "Tidak dapat terhubung ke server Google Translate.";
+          }
+        });
+
+      // Animasi 3D tilt pada .translate-box
+      const box = document.querySelector(".translate-box");
+      box.addEventListener("mousemove", function (e) {
+        const rect = box.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * 10; // max 10deg
+        const rotateY = ((x - centerX) / centerX) * 10;
+        box.style.transform = `rotateX(${-rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03,1.03,1.03)`;
+        box.style.boxShadow = `${-rotateY * 2}px ${
+          rotateX * 2 + 8
+        }px 32px rgba(2,136,209,0.18)`;
+      });
+      box.addEventListener("mouseleave", function () {
+        box.style.transform = "rotateX(0deg) rotateY(0deg) scale3d(1,1,1)";
+        box.style.boxShadow =
+          "0 6px 24px rgba(2,136,209,0.10), 0 1.5px 6px rgba(0,0,0,0.04)";
+      });
+
+      function speakInput() {
+  const text = document.getElementById('inputText').value;
+  const lang = document.getElementById('fromLang').value;
+  const langMap = {
+    id: "id-ID",
+    en: "en-US",
+    fr: "fr-FR",
+    de: "de-DE",
+    ja: "ja-JP",
+    es: "es-ES",
+    ar: "ar-SA",
+    zh: "zh-CN"
+  };
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = langMap[lang] || "id-ID";
+  speechSynthesis.speak(utterance);
+}
+
+      // Text-to-Speech
+      function speakResult() {
+        const text = document.getElementById("translateResult").textContent;
+        const lang = document.getElementById("toLang").value;
+        const langMap = {
+          id: "id-ID",
+          en: "en-US",
+          fr: "fr-FR",
+          de: "de-DE",
+          ja: "ja-JP",
+          es: "es-ES",
+          ar: "ar-SA",
+          zh: "zh-CN",
+        };
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = langMap[lang] || "en-US";
+        speechSynthesis.speak(utterance);
+      }
+
+      // Speech-to-Text
+      function startListening() {
+        const from = document.getElementById("fromLang").value;
+        const langMap = {
+          id: "id-ID",
+          en: "en-US",
+          fr: "fr-FR",
+          de: "de-DE",
+          ja: "ja-JP",
+          es: "es-ES",
+          ar: "ar-SA",
+          zh: "zh-CN",
+        };
+        const recognition = new (window.SpeechRecognition ||
+          window.webkitSpeechRecognition)();
+        recognition.lang = langMap[from] || "id-ID";
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = function (event) {
+          const result = event.results[0][0].transcript;
+          document.getElementById("inputText").value = result;
+        };
+
+        recognition.onerror = function (event) {
+          alert("Gagal mengenali suara: " + event.error);
+        };
+
+        recognition.start();
+      }
+    </script>
+  </body>
+</html>
