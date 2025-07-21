@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Translate</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -26,7 +29,14 @@
             placeholder="Masukkan teks yang ingin diterjemahkan..."
             required
           ></textarea>
-          <button style="margin-bottom: 10px;" type="button" onclick="speakInput()" class="translate-btn">🔊 Dengarkan </button>
+          <button
+            style="margin-bottom: 10px"
+            type="button"
+            onclick="speakInput()"
+            class="translate-btn"
+          >
+            🔊 Dengarkan
+          </button>
           <div class="translate-options">
             <label for="fromLang">Dari:</label>
             <select id="fromLang">
@@ -70,39 +80,53 @@
     </main>
 
     <script>
+      async function autoTranslate() {
+        const from = document.getElementById("fromLang").value;
+        const to = document.getElementById("toLang").value;
+        const text = document.getElementById("inputText").value.trim();
+        const resultDiv = document.getElementById("translateResult");
+
+        if (from === to) {
+          resultDiv.textContent = text;
+          return;
+        }
+
+        if (!text) {
+          resultDiv.textContent = "";
+          return;
+        }
+
+        resultDiv.textContent = "Menerjemahkan...";
+
+        try {
+          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(
+            text
+          )}`;
+          const response = await fetch(url);
+          const data = await response.json();
+          if (data && data[0] && data[0][0] && data[0][0][0]) {
+            resultDiv.textContent = data[0][0][0];
+          } else {
+            resultDiv.textContent = "Terjadi kesalahan saat menerjemahkan.";
+          }
+        } catch (err) {
+          resultDiv.textContent =
+            "Tidak dapat terhubung ke server Google Translate.";
+        }
+      }
+
       document
-        .getElementById("translateForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const from = document.getElementById("fromLang").value;
-          const to = document.getElementById("toLang").value;
-          const text = document.getElementById("inputText").value.trim();
-          const resultDiv = document.getElementById("translateResult");
+        .getElementById("inputText")
+        .addEventListener("input", autoTranslate);
+      document
+        .getElementById("fromLang")
+        .addEventListener("change", autoTranslate);
+      document
+        .getElementById("toLang")
+        .addEventListener("change", autoTranslate);
 
-          if (from === to) {
-            resultDiv.textContent = text;
-            return;
-          }
-
-          resultDiv.textContent = "Menerjemahkan...";
-
-          try {
-            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${from}&tl=${to}&dt=t&q=${encodeURIComponent(
-              text
-            )}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            // Hasil terjemahan ada di data[0][0][0]
-            if (data && data[0] && data[0][0] && data[0][0][0]) {
-              resultDiv.textContent = data[0][0][0];
-            } else {
-              resultDiv.textContent = "Terjadi kesalahan saat menerjemahkan.";
-            }
-          } catch (err) {
-            resultDiv.textContent =
-              "Tidak dapat terhubung ke server Google Translate.";
-          }
-        });
+      // Hapus event submit pada form
+      // document.getElementById("translateForm").addEventListener("submit", ...);
 
       // Animasi 3D tilt pada .translate-box
       const box = document.querySelector(".translate-box");
@@ -126,22 +150,22 @@
       });
 
       function speakInput() {
-  const text = document.getElementById('inputText').value;
-  const lang = document.getElementById('fromLang').value;
-  const langMap = {
-    id: "id-ID",
-    en: "en-US",
-    fr: "fr-FR",
-    de: "de-DE",
-    ja: "ja-JP",
-    es: "es-ES",
-    ar: "ar-SA",
-    zh: "zh-CN"
-  };
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = langMap[lang] || "id-ID";
-  speechSynthesis.speak(utterance);
-}
+        const text = document.getElementById("inputText").value;
+        const lang = document.getElementById("fromLang").value;
+        const langMap = {
+          id: "id-ID",
+          en: "en-US",
+          fr: "fr-FR",
+          de: "de-DE",
+          ja: "ja-JP",
+          es: "es-ES",
+          ar: "ar-SA",
+          zh: "zh-CN",
+        };
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = langMap[lang] || "id-ID";
+        speechSynthesis.speak(utterance);
+      }
 
       // Text-to-Speech
       function speakResult() {
